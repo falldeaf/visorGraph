@@ -2,10 +2,13 @@ require('dotenv').config()
 const port = process.env.PORT || 3000;
 const db_url = process.env.DBURL || 'mongodb://localhost:27017';
 
-const { json } = require('express');
 //EXPRESS
 const express = require('express');
+const bodyParser = require('body-parser')
 const app = express();
+
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
 //DATABASE
 const db = (async () => {
@@ -22,8 +25,28 @@ app.get('/', (req, res) => {
 	res.send("root");
 });
 
+app.get('/getsettings', async (req, res) => {
+	const dblocal = await db;
+	const collection = dblocal.collection('settings');
+	const result = await collection.find({}).toArray();
+	res.json(result);
+});
+
+app.get('/getsetting/:name', async (req, res) => {
+	const dblocal = await db;
+	const collection = dblocal.collection('settings');
+	const result = await collection.findOne({name: req.params.name});
+	res.json(result);
+});
+
+app.post('/newsetting', async (req, res) => {
+	const dblocal = await db;
+	const collection = dblocal.collection('settings');
+	await collection.updateOne({name: req.body.name}, {$set: req.body}, {upsert: true});
+	res.json(req.body);
+});
+
 app.get('/progress/:deviceid/:name/:percent/:color', async (req, res) => {
-	console.log()
 	const dblocal = await db;
 	const collection = dblocal.collection('progress');
 
