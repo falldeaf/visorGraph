@@ -1,0 +1,27 @@
+{
+  "name": "visorgraph",
+  "version": "1.0.0",
+  "description": "Backend server for simple stats, progress bars, and simple settings",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "daemon",
+    "stats",
+    "graph",
+    "progress",
+    "bar",
+    "stats"
+  ],
+  "author": "falldeaf",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "mongodb": "^4.1.4"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  }
+}
