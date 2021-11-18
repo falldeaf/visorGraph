@@ -75,8 +75,8 @@ app.get('/getpushes', async (req, res) => {
 	res.send(result);
 });
 
-app.listen(3000, function() {
-	console.log('listening on 3000');
+app.listen(port, function() {
+	console.log('listening on ' + port);
 });
 
 async function addPush(push_obj) {
