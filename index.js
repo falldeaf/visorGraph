@@ -99,15 +99,14 @@ app.get('/getpushes/:apikey', async (req, res) => {
 });
 
 /////////////HTTPS///////////////
-/*
 const httpsServer = https.createServer({
-	key: fs.readFileSync('/etc/letsencrypt/live/my_api_url/privkey.pem'),
-	cert: fs.readFileSync('/etc/letsencrypt/live/my_api_url/fullchain.pem'),
+	key: fs.readFileSync('server.key'),
+	cert: fs.readFileSync('server.cert'),
 }, app);
 
 httpsServer.listen(ssl_port, () => {
 	console.log('HTTPS Server running on port ' + ssl_port);
-});*/
+});
 
 /////////////HTTP////////////////
 const httpServer = http.createServer(app);
