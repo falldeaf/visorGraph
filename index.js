@@ -124,7 +124,7 @@ async function addPush(push_obj) {
 }
 
 //Check if the client has the correct API KEY
-function apikeyCheck(obj) {
+function apikeyCheck(obj, res) {
 	let test = (obj.apikey !== api_key);
 	if(test) { res.send("💀"); }
 	delete obj.apikey;
