@@ -3,6 +3,8 @@ const port = process.env.PORT || 80;
 const ssl_port = process.env.SSLPORT || 3000;
 const db_url = process.env.DBURL || 'mongodb://localhost:27017';
 const api_key = process.env.APIKEY;
+const key = process.env.KEY;
+const cert = process.env.CERT;
 
 const serve_index = require('serve-index');
 const http = require('http');
@@ -19,7 +21,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use('/.well-known', express.static('.well-known'), serve_index('.well-known'));
+app.use(express.static('public', { dotfiles: 'allow' }));
 
 //DATABASE
 const db = (async () => {
@@ -100,8 +102,8 @@ app.get('/getpushes/:apikey', async (req, res) => {
 
 /////////////HTTPS///////////////
 const httpsServer = https.createServer({
-	key: fs.readFileSync('server.key'),
-	cert: fs.readFileSync('server.cert'),
+	key: fs.readFileSync(key),
+	cert: fs.readFileSync(cert),
 }, app);
 
 httpsServer.listen(ssl_port, () => {
