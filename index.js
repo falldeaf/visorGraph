@@ -1,14 +1,25 @@
 require('dotenv').config()
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 80;
+const ssl_port = process.env.SSLPORT || 3000;
 const db_url = process.env.DBURL || 'mongodb://localhost:27017';
+const api_key = process.env.APIKEY;
+
+const serve_index = require('serve-index');
+const http = require('http');
+const https = require('https');
+const fs = require('fs');
 
 //EXPRESS
 const express = require('express');
 const bodyParser = require('body-parser')
+const cors = require('cors');
 const app = express();
 
+//middleware
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use('/.well-known', express.static('.well-known'), serve_index('.well-known'));
 
 //DATABASE
 const db = (async () => {
@@ -25,14 +36,18 @@ app.get('/', (req, res) => {
 	res.send("root");
 });
 
-app.get('/getsettings', async (req, res) => {
+app.get('/getsettings/:apikey', async (req, res) => {
+	if(apikeyCheck(req.params, res)) { return; }
+
 	const dblocal = await db;
 	const collection = dblocal.collection('settings');
 	const result = await collection.find({}).toArray();
 	res.json(result);
 });
 
-app.get('/getsetting/:name', async (req, res) => {
+app.get('/getsetting/:apikey/:name', async (req, res) => {
+	if(apikeyCheck(req.params, res)) { return; }
+
 	const dblocal = await db;
 	const collection = dblocal.collection('settings');
 	const result = await collection.findOne({name: req.params.name});
@@ -40,13 +55,17 @@ app.get('/getsetting/:name', async (req, res) => {
 });
 
 app.post('/newsetting', async (req, res) => {
+	if(apikeyCheck(req.body, res)) { return; }
+
 	const dblocal = await db;
 	const collection = dblocal.collection('settings');
 	await collection.updateOne({name: req.body.name}, {$set: req.body}, {upsert: true});
 	res.json(req.body);
 });
 
-app.get('/progress/:deviceid/:name/:percent/:color', async (req, res) => {
+app.get('/progress/:apikey/:deviceid/:name/:percent/:color', async (req, res) => {
+	if(apikeyCheck(req.params, res)) { return; }
+
 	const dblocal = await db;
 	const collection = dblocal.collection('progress');
 
@@ -63,20 +82,38 @@ app.get('/progress/:deviceid/:name/:percent/:color', async (req, res) => {
 	res.send(req.params.deviceid + " updated");
 });
 
-app.get('/push/:deviceid/:type/:title/:message/:url', async (req, res) => {
+app.get('/push/:apikey/:deviceid/:type/:title/:message/:url', async (req, res) => {
+	if(apikeyCheck(req.params, res)) { return; }
+
 	//TODO: sanitize inputs
 	res.send(await addPush(req.params)?"✔️":"💀");
 });
 
-app.get('/getpushes', async (req, res) => {
+app.get('/getpushes/:apikey', async (req, res) => {
+	if(apikeyCheck(req.params, res)) { return; }
+
 	const dblocal = await db;
 	const collection = dblocal.collection('pushes');
 	const result = await collection.find({}).toArray();
 	res.send(result);
 });
 
+/////////////HTTPS///////////////
+/*
+const httpsServer = https.createServer({
+	key: fs.readFileSync('/etc/letsencrypt/live/my_api_url/privkey.pem'),
+	cert: fs.readFileSync('/etc/letsencrypt/live/my_api_url/fullchain.pem'),
+}, app);
+
+httpsServer.listen(ssl_port, () => {
+	console.log('HTTPS Server running on port ' + ssl_port);
+});*/
+
+/////////////HTTP////////////////
+const httpServer = http.createServer(app);
+
 app.listen(port, function() {
-	console.log('listening on ' + port);
+	console.log('http listening on ' + port);
 });
 
 async function addPush(push_obj) {
@@ -85,6 +122,14 @@ async function addPush(push_obj) {
 	//TODO: sanitize inputs
 	await collection.insertOne(push_obj);
 	return true;
+}
+
+//Check if the client has the correct API KEY
+function apikeyCheck(obj) {
+	let test = (obj.apikey !== api_key);
+	if(test) { res.send("💀"); }
+	delete obj.apikey;
+	return test;
 }
 
 //Check every minute for stalled progess bars
