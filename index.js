@@ -1,4 +1,5 @@
 require('dotenv').config()
+const env = process.env.NODE_ENV || 'development';
 const port = process.env.PORT || 80;
 const ssl_port = process.env.SSLPORT || 3000;
 const db_url = process.env.DBURL || 'mongodb://localhost:27017';
@@ -86,29 +87,36 @@ app.get('/progress/:apikey/:deviceid/:name/:percent/:color', async (req, res) =>
 
 app.get('/push/:apikey/:deviceid/:type/:title/:message/:url', async (req, res) => {
 	if(apikeyCheck(req.params, res)) { return; }
+	var new_push = req.params;
+	new_push.timestamp = new Date();
 
 	//TODO: sanitize inputs
 	res.send(await addPush(req.params)?"✔️":"💀");
 });
 
-app.get('/getpushes/:apikey', async (req, res) => {
+app.get('/getpushes/:apikey/latest', async (req, res) => {
 	if(apikeyCheck(req.params, res)) { return; }
+
+	var dt = new Date();
+	var one_hour_ago = new Date(dt.setHours(dt.getHours() - 1));
 
 	const dblocal = await db;
 	const collection = dblocal.collection('pushes');
-	const result = await collection.find({}).toArray();
+	const result = await collection.find({ timestamp: {$gt: one_hour_ago} }).toArray();
 	res.send(result);
 });
 
-/////////////HTTPS///////////////
-const httpsServer = https.createServer({
-	key: fs.readFileSync(key),
-	cert: fs.readFileSync(cert),
-}, app);
+if(env === "production") {
+	/////////////HTTPS///////////////
+	const httpsServer = https.createServer({
+		key: fs.readFileSync(key),
+		cert: fs.readFileSync(cert),
+	}, app);
 
-httpsServer.listen(ssl_port, () => {
-	console.log('HTTPS Server running on port ' + ssl_port);
-});
+	httpsServer.listen(ssl_port, () => {
+		console.log('HTTPS Server running on port ' + ssl_port);
+	});
+}
 
 /////////////HTTP////////////////
 const httpServer = http.createServer(app);
