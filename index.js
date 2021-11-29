@@ -92,6 +92,15 @@ app.get('/progress/:apikey/:deviceid/:name/:percent/:color', async (req, res) =>
 	res.send(req.params.deviceid + " updated");
 });
 
+app.get('/getprogress/:apikey', async (req, res) => {
+	if(apikeyCheck(req.params, res)) { return; }
+
+	const dblocal = await db;
+	const collection = dblocal.collection('progress');
+	const result = await collection.find({}).toArray();
+	res.json(result);
+});
+
 app.get('/push/:apikey/:deviceid/:type/:title/:message/:url', async (req, res) => {
 	if(apikeyCheck(req.params, res)) { return; }
 	var new_push = req.params;
