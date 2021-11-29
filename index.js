@@ -72,9 +72,16 @@ app.get('/progress/:apikey/:deviceid/:name/:percent/:color', async (req, res) =>
 	const dblocal = await db;
 	const collection = dblocal.collection('progress');
 
+	//If the deviceid is already at 100, it's finished
 	if(req.params.percent >= 100) {
-		await collection.deleteMany({deviceid:req.params.deviceid});
-		addPush({deviceid:result.deviceid, type: 'error', title: result.name + " timeout", message: result.name + " has timed out", url: ""});
+
+		//If the deviceid is in the collection, delete it and send a notification
+		const result = await collection.find({deviceid: req.params.deviceid}).toArray();
+		if(result.length > 0) {
+			await collection.deleteMany({deviceid:req.params.deviceid});
+			addPush({deviceid:result.deviceid, type: 'error', title: result.name + " timeout", message: result.name + " has timed out", url: ""});
+		}
+	//if the deviceid is still under 100 update with the new progress value
 	} else {
 		var json_progress = req.params;
 		json_progress.update_time = new Date();
