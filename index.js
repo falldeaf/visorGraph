@@ -62,7 +62,7 @@ app.get('/getbytag/:apikey/:tag', async (req, res) => {
 
 	const dblocal = await db;
 	const collection = dblocal.collection('settings');
-	const result = await collection.findOne({tags: new RegExp(req.params.tag,'g')});
+	const result = await collection.find({tags: new RegExp(req.params.tag,'g')}).toArray();
 	res.json(result);
 });
 
