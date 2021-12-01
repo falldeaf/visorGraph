@@ -62,7 +62,8 @@ app.get('/getbytag/:apikey/:tag', async (req, res) => {
 
 	const dblocal = await db;
 	const collection = dblocal.collection('settings');
-	collection.find({tags: new RegExp(req.params.tag,'g')});
+	const result = await collection.find({tags: new RegExp(req.params.tag,'g')});
+	res.json(result);
 });
 
 app.get('/settag/:apikey/:name/:tag/:action', async (req, res) => {
@@ -83,6 +84,8 @@ app.get('/settag/:apikey/:name/:tag/:action', async (req, res) => {
 		case "only":
 			break;
 	}
+
+	res.send("✔️");
 });
 
 app.post('/newsetting', async (req, res) => {
