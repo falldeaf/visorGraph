@@ -57,6 +57,34 @@ app.get('/getsetting/:apikey/:name', async (req, res) => {
 	res.json(result);
 });
 
+app.get('/getbytag/:apikey/:tag', async (req, res) => {
+	if(apikeyCheck(req.params, res)) { return; }
+
+	const dblocal = await db;
+	const collection = dblocal.collection('settings');
+	collection.find({tags: new RegExp(req.params.tag,'g')});
+});
+
+app.get('/settag/:apikey/:name/:tag/:action', async (req, res) => {
+	if(apikeyCheck(req.params, res)) { return; }
+
+	const dblocal = await db;
+	const collection = dblocal.collection('settings');
+
+	switch(req.params.action) {
+		case "add":
+			collection.updateOne( 
+				{ name : req.params.name },
+				{ $push: { tags: req.params.tag } }
+			)
+			break;
+		case "remove":
+			break;
+		case "only":
+			break;
+	}
+});
+
 app.post('/newsetting', async (req, res) => {
 	if(apikeyCheck(req.body, res)) { return; }
 
@@ -168,7 +196,7 @@ setInterval(async () => {
 		const compare = Date.now() - result.update_time;
 		if(compare > ten_minutes) {
 			await collection.deleteMany({deviceid:result.deviceid});
-			addPush({deviceid:result.deviceid, type: 'error', title: result.name + " timeout", message: result.name + " has timed out", url: ""});
+			addPush({deviceid:result.deviceid, type: 'message', title: result.name + " timeout", message: result.name + " has timed out", url: ""});
 		}
 	});
 }, 60000);
