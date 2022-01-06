@@ -57,6 +57,15 @@ app.get('/getsetting/:apikey/:name', async (req, res) => {
 	res.json(result);
 });
 
+app.get('/setsetting/:apikey/:name/:value', async (req, res) => {
+	if(apikeyCheck(req.params, res)) { return; }
+
+	const dblocal = await db;
+	const collection = dblocal.collection('settings');
+	await collection.updateOne({name: req.params.name}, {$set: {"value": req.params.value}}, {upsert: true});
+	res.json(req.body);
+});
+
 app.get('/getbytag/:apikey/:tag', async (req, res) => {
 	if(apikeyCheck(req.params, res)) { return; }
 
