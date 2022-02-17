@@ -1,0 +1,13 @@
+[Unit]
+Description=Visor progress bar, notification and stat server
+After=network-online.target
+
+[Service]
+Type=simple
+Restart=on-failure
+WorkingDirectory=/home/falldeaf/git/visorGraph/
+ExecStart=/usr/bin/node /home/falldeaf/git/visorGraph/index.js
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

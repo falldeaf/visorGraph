@@ -39,6 +39,9 @@ app.get('/', (req, res) => {
 	res.send("root");
 });
 
+//Certbot dir
+app.use(express.static('public', { dotfiles: 'allow' }));
+
 app.get('/getsettings/:apikey', async (req, res) => {
 	if(apikeyCheck(req.params, res)) { return; }
 
